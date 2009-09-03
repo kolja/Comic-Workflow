@@ -1,0 +1,68 @@
+
+README
+
+
+Mission Statement
+-----------------
+
+Mir scheint, dass es keinen guten "Workflow" für die Comic-produktion gibt. Jeder Zeichner kocht sein eigens Süppchen.
+Grafik-Programme haben ihre eigenen, propietären Standards, oft speichern sie binäre Formate die nicht gut zur Versionierung geeignet sind.
+
+Das ist der Grund für dieses Projekt; Ich wünsche mir ein Format, welches die Produktion von Comics erleichtert. Es soll auch ein Testfeld für mich sein um herauszufinden, ob meine Ideen überhaupt praktikabel sind und die Comic-produktion erleichtern.
+
+Das Format soll:
+
+	- Verschiedene Stadien der Produktion eines Comics abbilden können:	
+		- Story 			– die ursprüngliche Geschichte, auf der der Comic basiert – noch nicht adaptiert
+		- Script 			– adaption der Geschichte für den Comic 
+		- Panel-description – beschreibung der Panels in Text-form
+		- rough				- grobe Skizze eines Panels bzw. der ganzen Seite
+		- sketch 			– Skizze eines Panels
+		- ink 				– Reinzeichnung eines Panels
+		- final 			– fertiges Panel (koloriert)
+		
+	- Möglichst Menschenlesbar und leicht Versionierbar sein; Weitgehend auf binäre Daten verzichten
+	- Teamarbeit unterstützen / ermöglichen
+	- eine Arbeitserleichtuerung bei der Comic-produktion sein
+	
+	- ggf. feedback über Fortschritte bei der Comicentwicklung geben
+	
+ComicML
+-------
+
+Als Format habe ich XML im Auge – irgendwas in der Form
+
+	<?xml version="1.0" encoding="UTF-8"?>
+	<!DOCTYPE comic SYSTEM "comic.dtd">
+
+	<comic>
+	
+		<header defaults="1">
+			<pagewidth></pagewidth>
+			<pageheight></pageheight>
+			<dividerwidth></dividerwidth>
+			...
+		</header>
+			
+		<page id="1">
+			<description></description>
+			<panel id="1">
+				<description>
+					in this panel we see two cartoon foxes without legs talking to each other
+				</description>
+				<text type="box01">meanwhile...</text>
+				<text type="bubble01">chunky bacon</text>
+			</panel>
+			<panel id="2">
+				<description></description>
+			</panel>
+			...
+		</page>
+		...
+		
+	</comic>
+	
+Mit Hilfe dieser Daten sollten man dann einzelne Panels und ganze Seiten als jpeg oder png, sowie fertige Comics als pdf oder – zur Weiterverarbeitung – im proprietären Format eines Satz-Programms wie Indesign generieren können.
+An dieser Stelle sei gesagt, dass nichts davon in Stein gemeisselt ist. diese Zeilen sind zwar mit ComicML überschrieben, aber ich könnte mir auch andere Formate als XML und einen anderen Namen für das Format denken (wie wär's z.B. mit "OpenComic"? oder "Grml" - für GRaphic-novel Markup Language?).
+
+Kolja, 2009
