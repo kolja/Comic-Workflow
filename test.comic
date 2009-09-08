@@ -9,8 +9,8 @@
 		kopfsteg = 		"33mm"
 		fusssteg = 		"66mm"
 		aussensteg = 	"47mm"
-		bundsteg = 		"23mm"
-		dividerwidth = 	"5mm"
+		bundsteg = 		"33mm"
+		dividerwidth = 	"3mm"
 		panelsperrow = 	"4"
 		panelspercol = 	"4"
 	/>
@@ -27,32 +27,57 @@
 		</panel>
 		<panel id="2">
 			<description>panel 2 description</description>
+			<text type="box01">two foxes</text>
 		</panel>
 		<panel id="3">
 			<description>panel 3 description</description>
-			<text type="box01">two foxes</text>
-			<text type="bubble01">Chunky Bacon, chunky bacon</text>
+			<text type="box01">Chunky Bacon, chunky bacon</text>
 		</panel>
 		<panel id="4" width="max">
 			<description>panel 4 description</description>
+			<text type="box01">two foxes</text>
 		</panel>
-		<panel id="5" width="2.5x">
+		<panel id="5" height="max" width="1.5x">
 			<description>panel 5 description</description>
 			<text type="box01" bla="blo">panel5: meanwhile... bla</text>
 		</panel>
+		<panel id="6" height="0.5x">
+			<description>a</description>
+			<text type="box01">two foxes</text>
+		</panel>
+		<panel id="7" height="0.5x" float="false">
+			<description>a</description>
+			<text type="box01">two foxes</text>
+		</panel>
+		<panel id="8" height="0.5x" float="false">
+			<description>a</description>
+			<text type="box01">two foxes</text>
+		</panel>
+		<panel id="9">
+			<description>a</description>
+			<text type="box01">two foxes</text>
+		</panel>
 	</page>
-
 	<page id="2">
 		<description>
-			page 2 description blabla Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut	
+			page 1 description blabla Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod 
 		</description>
-		<panel id="1">
-			<description>page 2 panel 1 description</description>
-		</panel>
-		<panel id="2">
-			<description>page 2 panel 2 description</description>
-			<text type="bubble01">those were the days, my friends</text>
-		</panel>
+		<panel id="1"></panel>
+		<panel id="2"></panel>
+		<panel id="3"></panel>
+		<panel id="4"></panel>
+		<panel id="5"></panel>
+		<panel id="6"></panel>
+		<panel id="7"></panel>
+		<panel id="8"></panel>
+		<panel id="9"></panel>
+		<panel id="10"></panel>
+		<panel id="11"></panel>
+		<panel id="12"></panel>
+		<panel id="13"></panel>
+		<panel id="14"></panel>
+		<panel id="15"></panel>
+		<panel id="16"></panel>
 	</page>
-	
+
 </comic>
