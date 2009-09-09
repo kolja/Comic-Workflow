@@ -5,7 +5,10 @@ require 'yaml'
 require 'optparse'
 require 'hpricot'
 require 'appscript'
+require 'RMagick'
 include Appscript
+include Magick
+
 
 # define comic structure
 
@@ -99,7 +102,7 @@ class Comic
   def generate(target)
     if target == :indesign then
       
-      puts "hallo indesign!"
+      puts "generating indesign document..."
       indesign = app("Adobe InDesign CS3")
       indesign.view_preferences.ruler_origin.set(:page_origin)
       indesign.view_preferences.set(app.view_preferences.horizontal_measurement_units, :to => :millimeters)
@@ -130,7 +133,57 @@ class Comic
       end
       
     elsif target == :images then
-      puts "target images: not yet implemented"
+      puts "generating images..."
+      
+      
+      dpmm = 300 / 25.4 # "Dots per mm" – 300dpi / 25.4 (mm per inch)
+      imgFolder = "img"
+      
+      unless File::directory?( imgFolder ) then
+        Dir.mkdir( imgFolder )
+      end
+      
+      pages.each do |page|
+        pageFolder = "#{imgFolder}/page#{page.attributes[:id]}"
+        unless File::directory?( pageFolder ) then
+          Dir.mkdir( pageFolder )
+        end
+               
+        page.panels.each do |panel|
+          filename = "#{pageFolder}/panel#{page.attributes[:id]}_#{panel.attributes[:id]}.png"
+          unless File::exists?( filename )
+            
+            border = 40
+            px = panel.size.x * dpmm
+            py = panel.size.y * dpmm
+            
+            img = Image.new( px + border*2, py + border*2 ) {
+              self.background_color = 'white'
+            }
+          
+            d = Draw.new
+          
+            d.fill("#888888")
+            d.line(border, border*2, border, border)
+            d.line(border, border, border*2, border)
+            d.line(px, py+border, px+border, py+border)
+            d.line(px+border, py+border, px+border, py)
+            
+            d.font_family('Georgia')
+            d.font_weight(Magick::NormalWeight)
+            d.pointsize(9)
+            d.font_style(Magick::NormalStyle)
+            d.gravity(Magick::SouthWestGravity)
+          
+            d.text( border, border-10, "#{panel.attributes[:description]}")
+          
+            d.draw( img )
+
+            img.write( filename )
+          end
+        end
+      end 
+      
     elsif target == :pdf then
       puts "target pdf: not yet implemented"
     end

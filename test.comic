@@ -64,9 +64,9 @@
 		</description>
 		<panel id="1"></panel>
 		<panel id="2"></panel>
-		<panel id="3"></panel>
+		<panel id="3" height="1.2x"></panel>
 		<panel id="4"></panel>
-		<panel id="5"></panel>
+		<panel id="5" height="0.2x"></panel>
 		<panel id="6"></panel>
 		<panel id="7"></panel>
 		<panel id="8"></panel>
@@ -74,10 +74,6 @@
 		<panel id="10"></panel>
 		<panel id="11"></panel>
 		<panel id="12"></panel>
-		<panel id="13"></panel>
-		<panel id="14"></panel>
-		<panel id="15"></panel>
-		<panel id="16"></panel>
 	</page>
 
 </comic>
