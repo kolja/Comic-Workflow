@@ -103,6 +103,7 @@ class Comic
     if target == :indesign then
       
       puts "generating indesign document..."
+      
       indesign = app("Adobe InDesign CS3")
       indesign.view_preferences.ruler_origin.set(:page_origin)
       indesign.view_preferences.set(app.view_preferences.horizontal_measurement_units, :to => :millimeters)
@@ -123,12 +124,13 @@ class Comic
       div2 = @defaults[:dividerwidth] / 2
       pages.each do |p|
         p.panels.each do |panel|
-          doc.pages[p.attributes[:id]].make(:new => :rectangle, :with_properties => { :geometric_bounds => [
-                                                                            panel.origin.y + div2, 
-                                                                            panel.origin.x + div2, 
-                                                                            panel.origin.y + panel.size.y - div2, 
-                                                                            panel.origin.x + panel.size.x - div2  ] 
-                                                                      } )
+          doc.pages[p.attributes[:id]].make(:new => :rectangle, :with_properties => {              
+            :geometric_bounds => [
+                                        panel.origin.y + div2, 
+                                        panel.origin.x + div2, 
+                                        panel.origin.y + panel.size.y - div2, 
+                                        panel.origin.x + panel.size.x - div2  ] 
+                                  } )
         end
       end
       
@@ -203,7 +205,9 @@ class Page
   end
   
   def arrange!
-    panels.each do |panel| panel.arrange! end
+    panels.each do |panel| 
+      panel.arrange! 
+    end
     return self
   end
 
@@ -263,54 +267,147 @@ class Panel
     if self == parentpage.panels.first then # we are dealing with the first panel on a page here
       origin.x = parentpage.margin_left
       origin.y = parentpage.margin_top
+      self.setSize!
     elsif self.float? then
       self.float_h( self.previous ) # position a panel on the right side of it's predecessor
     else # panel not floating
       self.float_v( self.previous ) # position a panel below its predecessor
-    end   
-    self.setSize!
+    end 
+    parentpage.panels.each do |p|
+      if p != self && self.intersectsWith?( p ) then # does it intersect with anything?
+        self.origin.y = p.y # in this case move it down below the "offending" panel
+        begin    
+          slideup   = self.slide_up!       
+          slideleft = self.slide_left! 
+        end while slideup || slideleft
+      end
+    end  
   end
   
   def float? # by default, panels float (are positioned to the right of their predecessor)
     attributes[:float]
   end
-  
-  def float_h( base ) # float self (position in x-direction) relative to 'base'
 
-    if origin.null? then # first call, no recursion yet
-      origin.y = base.origin.y
-      origin.x = base.x
-    end
-    
+# ----------------------------------------------
+  
+  def float_h( base ) # float self (position in x-direction) relative to 'base'  
+    origin.y = base.origin.y
+    origin.x = base.x
     if base.x + attributes[:width] > parentpage.parent.defaults[:pagewidth] - parentpage.margin_right then # the panel dosn't fit on the page horizontally; it has to be moved to the next line.      
-      origin.x = base.origin.x
-      origin.y = base.y
       self.float_v( base )  
     end
-    
-    if !base.previous.nil? && base.previous.x <= self.origin.x && origin.y != parentpage.margin_top then # slide this panel up by one (recursively)
-      origin.y = base.previous.origin.y
-      self.float_h( base.previous )
-    end
-    
-    # if self.intersectsWith?( base ) then self.float_h( base.previous ) end
+    self.setSize!
+    begin    
+      slideup   = self.slide_up!       
+      slideleft = self.slide_left! 
+    end while slideup || slideleft
   end
   
   def float_v( base ) # float self (position in y-direction) relative to 'base'
-
-    if origin.null? then
-      origin.x = base.origin.x
-      origin.y = base.y
-    end
-
-    if !base.previous.nil? && base.previous.y <= self.origin.y && origin.x != parentpage.margin_left then # we can slide this panel to the left by one (recursive case):
-      origin.x = base.previous.origin.x
-      self.float_v( base.previous )
-    elsif base.y + attributes[:height] > parentpage.parent.defaults[:pageheight] - parentpage.margin_bottom then # the panel dosn't fit on the page anymore
-      raise StandardError, "Panel #{attributes[:id]} doesn't fit on page #{parentpage.attributes[:id]}"
-    end
-     
+    origin.x = base.origin.x
+    origin.y = base.y
+    self.setSize!
+    begin     
+      slideleft = self.slide_left!      
+      slideup   = self.slide_up!        
+    end while slideup || slideleft
   end
+
+# ----------------------------------------------
+  
+  def slide_up!
+    # get the panel with the next smaller y-coordinate
+    list = parentpage.panels.reject{ |panel| panel.origin.y >= self.origin.y || panel.origin.y == 0 }
+    
+    if list.size > 0 then
+      newbase = list.sort!{ |p1,p2|  
+        if p1.y >= self.origin.y then
+          a = p1.origin.y
+        else 
+          a = p1.y
+        end
+        if p2.y >= self.origin.y then
+          b = p2.origin.y
+        else 
+          b = p2.y
+        end
+        a <=> b 
+      }.last
+      
+      # position a copy of self relative to it
+      c = self.clone
+      
+      if self.origin.y <= newbase.y then
+        c.origin.y = newbase.origin.y
+      else
+        c.origin.y = newbase.y
+      end
+      
+      # does it intersect with anything?
+      parentpage.panels.each do |p|
+        if p != self && c.intersectsWith?( p ) then # yes, it does: no sliding to be done. return false.
+          return false
+        end
+      end
+      
+      # no, it doesn't: adopt the new coordinates
+      self.origin.y = c.origin.y
+      return true
+      
+    else
+      return false
+    end
+  end
+  
+  def slide_left!
+    # get the panel with the next smaller y-coordinate
+    list = parentpage.panels.reject{ |panel| panel.origin.x >= self.origin.x || panel.origin.x == 0 }
+
+    if list.size > 0 then
+      newbase = list.sort!{ |p1,p2|  
+        if p1.x >= self.origin.x then
+          a = p1.origin.x
+        else 
+          a = p1.x
+        end
+        if p2.x >= self.origin.x then
+          b = p2.origin.x
+        else 
+          b = p2.x
+        end
+        a <=> b 
+      }.last
+      
+      # position a copy of self relative to it
+      c = self.clone
+      
+      if self.origin.x <= newbase.x then
+        c.origin.x = newbase.origin.x
+      else
+        c.origin.x = newbase.x
+      end
+
+      # does it intersect with anything?
+      parentpage.panels.each do |p|
+        if p != self && c.intersectsWith?( p ) then # yes, it does: no sliding up. return false.
+          return false
+        end
+      end
+      
+      # no, it doesn't: adopt the new coordinates
+      self.origin.x = c.origin.x
+      return true
+
+    else
+      return false
+    end
+  end
+  
+  # when a panel is "trapped" on three sides, it may be necessary to slide it down until there is enough space for it.
+  # the neccessity to slide right may in fact occur, but it shouldn't for the purposes of common comic reading order.
+  def slide_down( base ) 
+  end  
+  
   
   def setSize!
     size.x = attributes[:width]
@@ -328,8 +425,11 @@ class Panel
     end
   end
   
-  def intersectsWith?( frame )
-    x > frame.origin.x && y > frame.origin.y
+  def intersectsWith?( panel )
+    if parentpage.attributes[:id].to_i == 2 && self.attributes[:id].to_i == 7 then
+      puts "x:#{origin.x} y:#{origin.y}"
+    end
+    [x, panel.x].min > [origin.x, panel.origin.x].max && [y, panel.y].min > [origin.y, panel.origin.y].max
   end
   
   def x # Max extension of this panel in x-direction
@@ -338,6 +438,15 @@ class Panel
   
   def y # Max extension of this panel in y-direction
     origin.y + size.y
+  end
+  
+  def clone
+    cl = Panel.new( self.parentpage )
+    cl.attributes = self.attributes.clone
+    cl.text = self.text
+    cl.size = self.size.clone
+    cl.origin = self.origin.clone
+    return cl
   end
   
 end  
@@ -377,6 +486,10 @@ class Point
     x == 0 && y == 0
   end
   
+  #redundant?
+  def clone
+    Point.new( x, y )
+  end
 end
 
 
