@@ -12,6 +12,7 @@ include Magick
 
 # define comic structure
 
+
 class Comic
   
   attr_accessor :defaults, :pages
@@ -27,7 +28,11 @@ class Comic
     hpricotfile.search("defaults").each do |defaults|
       defaults.attributes.each do |key, value|
         unit = value.slice!(/\D*$/) # strip unit – and ignore it for now.
-        @defaults[key.to_sym] = value.to_f
+        if key == "id" then
+          @defaults[key.to_sym] = value.to_s
+        else
+          @defaults[key.to_sym] = value.to_f
+        end
       end
       @defaults[:content_width] = @defaults[:pagewidth] - @defaults[:aussensteg] - @defaults[:bundsteg]
       @defaults[:content_height] = @defaults[:pageheight] - @defaults[:kopfsteg] - @defaults[:fusssteg]
@@ -120,17 +125,62 @@ class Comic
                                        :page_height => @defaults[:pageheight],
                                    },                      
       })
+      layer = Hash.new
+      [ "background", "panels", "text boxes", "speech bubbles"].each do |layername|
+        layer[layername.gsub(/\s/, "_").to_sym] = doc.make( :new => :layer, :with_properties => { :name => layername } )
+      end
       
       div2 = @defaults[:dividerwidth] / 2
+      dpmm = @defaults[:resolution] / 25.4
+      
       pages.each do |p|
         p.panels.each do |panel|
-          doc.pages[p.attributes[:id]].make(:new => :rectangle, :with_properties => {              
+          frame = doc.pages[p.attributes[:id]].make( :new => :rectangle, :with_properties => {   
+            :item_layer => layer[:panels],            
             :geometric_bounds => [
-                                        panel.origin.y + div2, 
-                                        panel.origin.x + div2, 
-                                        panel.origin.y + panel.size.y - div2, 
-                                        panel.origin.x + panel.size.x - div2  ] 
-                                  } )
+              panel.origin.y + div2, 
+              panel.origin.x + div2, 
+              panel.origin.y + panel.size.y - div2, 
+              panel.origin.x + panel.size.x - div2  ], 
+            :stroke_color => "Black",
+            :stroke_weight => 2
+          })
+          
+          imgFolder = "images#{@defaults[:id]}"
+          pageFolder = "#{imgFolder}/page#{p.attributes[:id]}"
+          filename = "#{pageFolder}/panel#{p.attributes[:id]}_#{panel.attributes[:id]}.png"
+          
+          if File::exists?( filename ) then
+            frame.place( 
+              MacTypes::Alias.path( filename ),
+              :destination_layer => layer[:panels],
+              :with_properties => { 
+                :geometric_bounds => [
+                  panel.origin.y + div2 - defaults[:imageborder]/dpmm, 
+                  panel.origin.x + div2 - defaults[:imageborder]/dpmm, 
+                  panel.origin.y + panel.size.y - div2 + defaults[:imageborder]/dpmm, 
+                  panel.origin.x + panel.size.x - div2 + defaults[:imageborder]/dpmm  ],
+              }
+            )
+          end
+          
+          panel.text.each do |text|
+            textframe = doc.pages[p.attributes[:id]].make( :new => :text_frame, :with_properties => { 
+              :inset_spacing => [5,5,5,5],  
+              :item_layer => layer[:text_boxes],    
+              :contents => text[:content],
+              :geometric_bounds => [
+                panel.origin.y + @defaults[:dividerwidth], 
+                panel.origin.x + @defaults[:dividerwidth], 
+                panel.origin.y + panel.size.y - div2, 
+                panel.origin.x + panel.size.x - div2  ],                      
+              :stroke_color => "Black",
+              :stroke_weight => 2
+            })
+            textframe.text_frame_preferences.inset_spacing.set [div2,div2,div2,div2]
+            textframe.fit :given => :frame_to_content
+          end
+          
         end
       end
       
@@ -138,8 +188,8 @@ class Comic
       puts "generating images..."
       
       
-      dpmm = 300 / 25.4 # "Dots per mm" – 300dpi / 25.4 (mm per inch)
-      imgFolder = "img"
+      dpmm = defaults[:resolution] / 25.4 # "Dots per mm" – 300dpi / 25.4 (mm per inch)
+      imgFolder = "images#{@defaults[:id]}"
       
       unless File::directory?( imgFolder ) then
         Dir.mkdir( imgFolder )
@@ -155,7 +205,7 @@ class Comic
           filename = "#{pageFolder}/panel#{page.attributes[:id]}_#{panel.attributes[:id]}.png"
           unless File::exists?( filename )
             
-            border = 40
+            border = defaults[:imageborder]
             px = panel.size.x * dpmm
             py = panel.size.y * dpmm
             
@@ -177,8 +227,10 @@ class Comic
             d.font_style(Magick::NormalStyle)
             d.gravity(Magick::SouthWestGravity)
           
-            d.text( border, border-10, "#{panel.attributes[:description]}")
-          
+            if panel.attributes[:description] then
+              d.text( border, border-10, "#{panel.attributes[:description]}")
+            end
+            
             d.draw( img )
 
             img.write( filename )
@@ -426,9 +478,6 @@ class Panel
   end
   
   def intersectsWith?( panel )
-    if parentpage.attributes[:id].to_i == 2 && self.attributes[:id].to_i == 7 then
-      puts "x:#{origin.x} y:#{origin.y}"
-    end
     [x, panel.x].min > [origin.x, panel.origin.x].max && [y, panel.y].min > [origin.y, panel.origin.y].max
   end
   

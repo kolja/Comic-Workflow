@@ -13,6 +13,8 @@
 		dividerwidth = 	"3mm"
 		panelsperrow = 	"4"
 		panelspercol = 	"4"
+		resolution = "300"
+		imageborder = "40"
 	/>
 		
 	<page id="1">
