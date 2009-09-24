@@ -25,39 +25,39 @@
 			<description>
 				panel 1 description
 			</description>
-			<text type="box01">panel1: meanwhile...</text>
+			<text type="free">panel1: meanwhile...</text>
 		</panel>
 		<panel id="2">
 			<description>panel 2 description</description>
-			<text type="box01">two foxes</text>
+			<text type="box">two foxes</text>
 		</panel>
 		<panel id="3">
 			<description>panel 3 description</description>
-			<text type="box01">Chunky Bacon, chunky bacon</text>
+			<text type="speech">Chunky Bacon, chunky bacon</text>
 		</panel>
 		<panel id="4" width="max">
 			<description>panel 4 description</description>
-			<text type="box01">two foxes</text>
+			<text type="box">two foxes</text>
 		</panel>
 		<panel id="5" height="max" width="1.5x">
 			<description>panel 5 description</description>
-			<text type="box01" bla="blo">panel5: meanwhile... bla</text>
+			<text type="speech" bla="blo">Wer reitet so spät durch Nacht und Wind? Es ist der Vater mit seinem Kind. Er hält den Knaben wohl in dem Arm, er fasst ihn sicher und hält ihn warm.</text>
 		</panel>
-		<panel id="6" height="0.5x">
+		<panel id="6" height="0.5x" type="overlay">
 			<description>a</description>
-			<text type="box01">two foxes</text>
+			<text type="box">two foxes</text>
 		</panel>
 		<panel id="7" height="0.5x" float="false">
 			<description>a</description>
-			<text type="box01">two foxes</text>
+			<text type="box">two foxes</text>
 		</panel>
-		<panel id="8" height="0.5x" float="false">
+		<panel id="8" height="0.5x" float="false" type="background">
 			<description>a</description>
-			<text type="box01">two foxes</text>
+			<text type="box">two foxes</text>
 		</panel>
 		<panel id="9">
 			<description>a</description>
-			<text type="box01">two foxes</text>
+			<text type="box">two foxes</text>
 		</panel>
 	</page>
 	<page id="2">

@@ -9,6 +9,9 @@ require 'RMagick'
 include Appscript
 include Magick
 
+# require my own stuff
+require File.expand_path( File.dirname(__FILE__) + "/lib/Point.rb" )
+
 
 # define comic structure
 
@@ -52,6 +55,9 @@ class Comic
         if panel.at("description") then currentPanel.attributes[:description] = panel.at("description").inner_html.strip end
         panel.attributes.each do |key, value|
           currentPanel.attributes[key.to_sym] = value
+        end
+        unless currentPanel.attributes.has_key?(:type) then
+          currentPanel.attributes[:type] = :default
         end
         # set panel float behaviour
         if currentPanel.attributes.has_key?(:float) then
@@ -125,10 +131,23 @@ class Comic
                                        :page_height => @defaults[:pageheight],
                                    },                      
       })
+      # make Layers
       layer = Hash.new
-      [ "background", "panels", "text boxes", "speech bubbles"].each do |layername|
+      [ "background", "panels", "overlay", "text boxes", "speech bubbles"].each do |layername|
         layer[layername.gsub(/\s/, "_").to_sym] = doc.make( :new => :layer, :with_properties => { :name => layername } )
       end
+      # make Character-Styles
+      char_style = Hash.new
+      [ "box", "speech", "think" ].each do |charStyleName|
+        char_style[charStyleName.to_sym] = doc.make( :new => :character_style, :with_properties => { :name => charStyleName } )
+      end    
+      # make Paragraph-Styles
+      paragraph_style = Hash.new
+      [ "box", "speech", "think" ].each do |paragraphStyleName|
+        paragraph_style[paragraphStyleName.to_sym] = doc.make( :new => :paragraph_style, :with_properties => { :name => paragraphStyleName } )
+        paragraph_style[paragraphStyleName.to_sym].justification.set :center_align
+      end    
+      paragraph_style[:box].justification.set :left_align
       
       div2 = @defaults[:dividerwidth] / 2
       dpmm = @defaults[:resolution] / 25.4
@@ -164,21 +183,93 @@ class Comic
             )
           end
           
+          if panel.attributes[:type].to_sym == :background then
+            frame.item_layer.set layer[:background]
+            frame.stroke_color.set "None"
+          elsif panel.attributes[:type].to_sym == :overlay then
+            frame.item_layer.set layer[:overlay]
+          end
+          
           panel.text.each do |text|
-            textframe = doc.pages[p.attributes[:id]].make( :new => :text_frame, :with_properties => { 
-              :inset_spacing => [5,5,5,5],  
-              :item_layer => layer[:text_boxes],    
-              :contents => text[:content],
-              :geometric_bounds => [
-                panel.origin.y + @defaults[:dividerwidth], 
-                panel.origin.x + @defaults[:dividerwidth], 
-                panel.origin.y + panel.size.y - div2, 
-                panel.origin.x + panel.size.x - div2  ],                      
-              :stroke_color => "Black",
-              :stroke_weight => 2
-            })
-            textframe.text_frame_preferences.inset_spacing.set [div2,div2,div2,div2]
-            textframe.fit :given => :frame_to_content
+            
+            if text[:type] == "box" then # TextBox "meanwhile..." Style
+              
+              textframe = doc.pages[p.attributes[:id]].make( 
+                :new => :text_frame, 
+                :with_properties => { 
+                  :inset_spacing => [5,5,5,5],  
+                  :item_layer => layer[:text_boxes],    
+                  :contents => text[:content],
+                  :geometric_bounds => [
+                    panel.origin.y + @defaults[:dividerwidth], 
+                    panel.origin.x + @defaults[:dividerwidth], 
+                    panel.origin.y + panel.size.y - div2, 
+                    panel.origin.x + panel.size.x - div2  ],                      
+                  :stroke_color => "Black",
+                  :fill_color => "Paper",
+                  :stroke_weight => 2
+                }
+              )
+              textframe.text_frame_preferences.inset_spacing.set [div2,div2,div2,div2]
+              textframe.paragraphs.applied_paragraph_style.set paragraph_style[:box]
+              textframe.fit :given => :frame_to_content
+              
+            else # ordinary speech bubble
+              
+              # load speechbubble data
+              bubbledata = YAML.load_file "bubbles.yaml"
+              bubbledata = bubbledata[ text[:type].to_sym ]
+              
+              # create a generic polygon
+              bubble = doc.pages[1].make(
+                :new => :polygon,
+                :with_properties => {
+                  :item_layer => layer[:speech_bubbles],    
+                  :content_type => :text_type,
+                  :fill_color => "Paper",
+                  :number_of_sides => bubbledata.length,
+                  :stroke_weight => 1
+                }
+              )
+                           
+              # draw speechbubble
+              
+              point_array = bubble.paths.first.path_points.get
+              factor = 3
+              
+              point_array.each_index do |i|
+
+                pnt = {
+                  :anchor   => Point.new( bubbledata[i][:anchor] ),
+                  :left     => Point.new( bubbledata[i][:left] ),
+                  :right    => Point.new( bubbledata[i][:right] )
+                }
+
+                pnt.each do |key, value| pnt[key] = value * factor end
+
+                unless pnt[:left].parallel?(pnt[:right]) then
+                  point_array[i].point_type.set( :corner )
+                end
+
+                point_array[i].anchor.set( pnt[:anchor].to_array )
+                point_array[i].left_direction.set( (pnt[:anchor] + pnt[:left]).to_array )
+                point_array[i].right_direction.set( (pnt[:anchor] + pnt[:right]).to_array )
+              end
+              
+              # enter text into speechbubble
+              bubble.text_frame_preferences.inset_spacing.set [div2,div2,div2,div2]
+              bubble.contents.set text[:content]
+              bubble.paragraphs.applied_paragraph_style.set paragraph_style[:speech]
+              bubble.fit :given => :frame_to_content
+              bubble.move :to => [panel.origin.x, panel.origin.y + div2*2]
+              
+              # make Speechbubble invisible
+              if text[:type].to_sym == :free then
+                bubble.fill_color.set "None"
+                bubble.stroke_color.set "None"
+              end
+              
+            end
           end
           
         end
@@ -478,7 +569,11 @@ class Panel
   end
   
   def intersectsWith?( panel )
-    [x, panel.x].min > [origin.x, panel.origin.x].max && [y, panel.y].min > [origin.y, panel.origin.y].max
+    if panel.attributes[:type].to_sym == :overlay then
+      false
+    else
+      [x, panel.x].min > [origin.x, panel.origin.x].max && [y, panel.y].min > [origin.y, panel.origin.y].max
+    end
   end
   
   def x # Max extension of this panel in x-direction
@@ -500,6 +595,7 @@ class Panel
   
 end  
 
+=begin
 # Points are used to store the coordinates and width and height of a panel
 class Point
   
@@ -540,7 +636,7 @@ class Point
     Point.new( x, y )
   end
 end
-
+=end
 
 # ----------------------------------------------------
 # first, parse the commandline options:
