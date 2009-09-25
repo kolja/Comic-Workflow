@@ -82,7 +82,10 @@
 		<panel id="2" height="2x" width="1.5x" float="false"></panel>
 		<panel id="4"></panel>
 		<panel id="3" height="2x" width="1.5x"></panel>
-		<panel id="5" width="2.5x"></panel>
+		<panel id="5" width="2.5x">
+			<description>put a bubble on this panel</description>
+			<text type="speech">I'm a poor lonesome cowboy and a long way from home</text>
+		</panel>
 		<panel id="6"></panel>
 		<panel id="7"></panel>
 		<panel id="8"></panel>
