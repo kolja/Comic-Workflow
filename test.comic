@@ -3,18 +3,19 @@
 
 <comic id="test">
 
-	<defaults id="1"
-		pagewidth = 	"210mm"
-		pageheight = 	"297mm"
-		kopfsteg = 		"33mm"
-		fusssteg = 		"66mm"
-		aussensteg = 	"47mm"
-		bundsteg = 		"33mm"
-		dividerwidth = 	"3mm"
-		panelsperrow = 	"4"
-		panelspercol = 	"4"
-		resolution = "300"
-		imageborder = "40"
+	<defaults 
+		id				= "1"
+		pagewidth 		= "210mm"
+		pageheight 		= "297mm"
+		kopfsteg 		= "33mm"
+		fusssteg 		= "66mm"
+		aussensteg 		= "47mm"
+		bundsteg 		= "33mm"
+		dividerwidth 	= "3mm"
+		panelsperrow 	= "4"
+		panelspercol 	= "4"
+		resolution 		= "300"
+		imageborder 	= "40"
 	/>
 		
 	<page id="1">

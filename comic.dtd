@@ -1,0 +1,31 @@
+<!-- http://github.com/kolja/Comic-Workflow -->
+
+<!ELEMENT comic (defaults, page+)>
+<!ELEMENT defaults>
+<!ELEMENT page (description?, panel*)>
+<!ELEMENT panel (description?, text*)>
+<!ELEMENT description (#PCDATA)>
+<!ELEMENT text (#PCDATA)>
+
+<!ATTLIST comic 	id 			  CDATA #IMPLIED>
+<!ATTLIST defaults           
+					id			  CDATA #IMPLIED
+					pagewidth 	  CDATA #IMPLIED
+					pageheight 	  CDATA #IMPLIED
+					kopfsteg 	  CDATA #IMPLIED
+					fusssteg 	  CDATA #IMPLIED
+					aussensteg 	  CDATA #IMPLIED
+					bundsteg 	  CDATA #IMPLIED
+					dividerwidth  CDATA #IMPLIED
+            		panelsperrow  CDATA #IMPLIED
+            		panelspercol  CDATA #IMPLIED
+            		resolution 	  CDATA #IMPLIED
+            		imageborder	  CDATA #IMPLIED>
+<!ATTLIST page 		id 			  CDATA #IMPLIED>
+<!ATTLIST panel 
+					id 			  CDATA #IMPLIED
+					width 		  CDATA #IMPLIED
+					height 		  CDATA #IMPLIED
+					float		  (true|false) "true"
+					type 		  (background|overlay|default) "default">
+<!ATTLIST text 		type 		  (box|speech|think|free) "box">					
