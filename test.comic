@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE comic SYSTEM "comic.dtd">
 
-<comic>
+<comic id="test">
 
 	<defaults id="1"
 		pagewidth = 	"210mm"

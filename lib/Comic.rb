@@ -38,6 +38,8 @@ class Comic
       @defaults[:panel_height] = @defaults[:content_height] / @defaults[:panelspercol]
     end
     
+    @defaults[:comic_id] = hpricotfile.search("comic").first.attributes["id"]
+    
     # parse the content of each page: panels with speech-bubbles and such
     hpricotfile.search("page").each do |page|
       currentPage = Page.new
@@ -275,7 +277,7 @@ class Comic
       
       
       dpmm = defaults[:resolution] / 25.4 # "Dots per mm" – 300dpi / 25.4 (mm per inch)
-      imgFolder = "images#{@defaults[:id]}"
+      imgFolder = "images_#{@defaults[:comic_id]}"
       
       unless File::directory?( imgFolder ) then
         Dir.mkdir( imgFolder )
@@ -288,6 +290,10 @@ class Comic
         end
                
         page.panels.each do |panel|
+          # with the page_id in the name of the image, each image in a comic has an individual name. So it will not be accidentally
+          # overwritten with an image from another page.
+          # change the page-numbering though, and you'll have to rename a lot of files by hand :-(
+          # I opt for security over convenience here.
           filename = "#{pageFolder}/panel#{page.attributes[:id]}_#{panel.attributes[:id]}.jpeg"
           unless File::exists?( filename )
             
